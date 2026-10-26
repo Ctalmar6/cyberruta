@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { todasLasTarjetas, unidad1 } from './contenido'
+import { lecciones, todasLasTarjetas, unidades } from './contenido'
 import { retos } from './laboratorio'
 import { ListaRetos, Reto } from './Retos'
 import { Leccion } from './Leccion'
@@ -29,12 +29,12 @@ export default function App() {
   const xp = xpHoy(progreso, ahora)
   const dias = racha(progreso, ahora)
   const pendientes = tarjetasPendientes(progreso, ahora).filter((id) => todasLasTarjetas[id])
-  const siguiente = unidad1.find((l) => !progreso.leccionesHechas.includes(l.id))
+  const siguiente = lecciones.find((l) => !progreso.leccionesHechas.includes(l.id))
   const antes = { xp, racha: dias }
   const retosHechos = retos.filter((r) => progreso.leccionesHechas.includes(r.id)).length
 
   if (pantalla.tipo === 'leccion') {
-    const leccion = unidad1.find((l) => l.id === pantalla.id)!
+    const leccion = lecciones.find((l) => l.id === pantalla.id)!
     return (
       <Leccion
         leccion={leccion}
@@ -128,7 +128,7 @@ export default function App() {
                 {progreso.leccionesHechas.length === 0 ? 'Comenzar' : 'Siguiente'}: {siguiente.titulo}
               </button>
             ) : (
-              pendientes.length === 0 && <p className="ayuda">Unidad 1 completa 🎉 La Unidad 2 llega pronto.</p>
+              pendientes.length === 0 && <p className="ayuda">¡Completaste todas las lecciones! 🎉 Pronto llega más contenido.</p>
             )}
           </div>
         </div>
@@ -163,9 +163,9 @@ export default function App() {
                     <div className="unidad-cuerpo">
                       <strong>{u.titulo}</strong>
                       <p>{u.temas}</p>
-                      {i === 0 ? (
+                      {unidades[i] ? (
                         <ul className="lecciones">
-                          {unidad1.map((l) => {
+                          {unidades[i].map((l) => {
                             const hecha = progreso.leccionesHechas.includes(l.id)
                             const disponible = hecha || l.id === siguiente?.id
                             return (
