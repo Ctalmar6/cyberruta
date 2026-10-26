@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { normalizar, todasLasTarjetas, unidad1 } from './contenido.ts'
+import { retos } from './laboratorio.ts'
 
 test('el contenido es coherente', () => {
-  const ids = unidad1.flatMap((l) => l.tarjetas.map((t) => t.id))
+  const ids = [...unidad1, ...retos].flatMap((l) => l.tarjetas.map((t) => t.id))
   assert.equal(new Set(ids).size, ids.length, 'ids de tarjeta repetidos')
   assert.equal(Object.keys(todasLasTarjetas).length, ids.length)
   for (const l of unidad1) {

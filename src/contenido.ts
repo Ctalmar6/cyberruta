@@ -1,3 +1,5 @@
+import { retos } from './laboratorio.ts'
+
 export type Ejercicio =
   | { tipo: 'opcion'; pregunta: string; opciones: string[]; correcta: number; explicacion: string }
   | { tipo: 'completar'; pregunta: string; respuestas: string[]; explicacion: string }
@@ -364,7 +366,7 @@ export const unidad1: Leccion[] = [
 ]
 
 export const todasLasTarjetas: Record<string, Tarjeta> = Object.fromEntries(
-  unidad1.flatMap((l) => l.tarjetas).map((t) => [t.id, t]),
+  [...unidad1, ...retos].flatMap((l) => l.tarjetas).map((t) => [t.id, t]),
 )
 
 // Minúsculas y sin tildes, para no castigar "núcleo" vs "nucleo".

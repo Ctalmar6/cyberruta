@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { todasLasTarjetas, unidad1 } from './contenido'
+import { retos } from './laboratorio'
+import { ListaRetos, Reto } from './Retos'
 import { Leccion } from './Leccion'
 import {
   cargar, completarLeccion, guardar, META_DIARIA_XP, racha, repasar, tarjetasPendientes, xpHoy, type Progreso,
@@ -12,6 +14,8 @@ type Pantalla =
   | { tipo: 'leccion'; id: string; antes: Antes }
   | { tipo: 'repaso'; ids: string[]; antes: Antes }
   | { tipo: 'resultado'; antes: Antes }
+  | { tipo: 'laboratorio' }
+  | { tipo: 'reto'; id: string; antes: Antes }
 
 // XP y racha al abrir la lección o el repaso, para mostrar cuánto ganaste.
 type Antes = { xp: number; racha: number }
@@ -27,6 +31,7 @@ export default function App() {
   const pendientes = tarjetasPendientes(progreso, ahora).filter((id) => todasLasTarjetas[id])
   const siguiente = unidad1.find((l) => !progreso.leccionesHechas.includes(l.id))
   const antes = { xp, racha: dias }
+  const retosHechos = retos.filter((r) => progreso.leccionesHechas.includes(r.id)).length
 
   if (pantalla.tipo === 'leccion') {
     const leccion = unidad1.find((l) => l.id === pantalla.id)!
@@ -49,6 +54,30 @@ export default function App() {
         onRepasar={(id, recordo) => setProgreso((p) => repasar(p, id, recordo, new Date()))}
         onSalir={() => setPantalla({ tipo: 'inicio' })}
         onTerminar={() => setPantalla({ tipo: 'resultado', antes: pantalla.antes })}
+      />
+    )
+  }
+
+  if (pantalla.tipo === 'laboratorio') {
+    return (
+      <ListaRetos
+        hechos={progreso.leccionesHechas}
+        onAbrir={(id) => setPantalla({ tipo: 'reto', id, antes })}
+        onSalir={() => setPantalla({ tipo: 'inicio' })}
+      />
+    )
+  }
+
+  if (pantalla.tipo === 'reto') {
+    const reto = retos.find((r) => r.id === pantalla.id)!
+    return (
+      <Reto
+        reto={reto}
+        onSalir={() => setPantalla({ tipo: 'laboratorio' })}
+        onTerminar={(pistas) => {
+          setProgreso(completarLeccion(progreso, reto.id, reto.tarjetas.map((t) => t.id), pistas, new Date()))
+          setPantalla({ tipo: 'resultado', antes: pantalla.antes })
+        }}
       />
     )
   }
@@ -105,6 +134,15 @@ export default function App() {
         </div>
       </section>
 
+      <button className="lab-acceso" onClick={() => setPantalla({ tipo: 'laboratorio' })}>
+        <span className="emoji" aria-hidden>🧪</span>
+        <span>
+          <strong>Laboratorio de Linux</strong>
+          <small>{retosHechos}/{retos.length} retos · practica comandos en una terminal simulada</small>
+        </span>
+        <span aria-hidden>›</span>
+      </button>
+
       <h2>Tu ruta de 0 a 100</h2>
       <ol className="ruta">
         {ruta.map((nivel) => (
@@ -139,6 +177,10 @@ export default function App() {
                             )
                           })}
                         </ul>
+                      ) : u.titulo.startsWith('Linux') ? (
+                        <button className="leccion" onClick={() => setPantalla({ tipo: 'laboratorio' })}>
+                          <span aria-hidden>🧪</span> Practícalo en el Laboratorio
+                        </button>
                       ) : (
                         <p className="ayuda">Próximamente</p>
                       )}
