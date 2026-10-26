@@ -1,5 +1,6 @@
 import { retos } from './laboratorio.ts'
 import { unidad2 } from './unidad2.ts'
+import { unidad3 } from './unidad3.ts'
 
 export type Ejercicio =
   | { tipo: 'opcion'; pregunta: string; opciones: string[]; correcta: number; explicacion: string }
@@ -367,7 +368,7 @@ export const unidad1: Leccion[] = [
 ]
 
 // En el orden de la ruta: la unidad i corresponde a ruta[0].unidades[i].
-export const unidades: Leccion[][] = [unidad1, unidad2]
+export const unidades: Leccion[][] = [unidad1, unidad2, unidad3]
 export const lecciones = unidades.flat()
 
 export const todasLasTarjetas: Record<string, Tarjeta> = Object.fromEntries(
