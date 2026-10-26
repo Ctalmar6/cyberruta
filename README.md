@@ -13,7 +13,7 @@ npm test        # pruebas de la lógica y del contenido
 npm run build   # compilación de producción
 ```
 
-Cada push a `main` corre las pruebas y publica en GitHub Pages.
+Cada push a `main` corre las pruebas y publica en GitHub Pages y en Vercel (si el repo está importado allí).
 
 - Contenido de las lecciones: `src/contenido.ts`
 - XP, racha y repasos: `src/progreso.ts`

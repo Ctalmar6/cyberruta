@@ -4,8 +4,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // GitHub Pages sirve la app en https://ctalmar6.github.io/cyberruta/
-  base: '/cyberruta/',
+  // Vercel (define VERCEL=1 al compilar) sirve en la raíz; GitHub Pages en /cyberruta/.
+  base: process.env.VERCEL ? '/' : '/cyberruta/',
   plugins: [
     react(),
     VitePWA({
