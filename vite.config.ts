@@ -10,6 +10,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        importScripts: ['push-sw.js'], // notificaciones del recordatorio diario
+        navigateFallbackDenylist: [/^\/api\//], // la API nunca sale del caché
+      },
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'CyberRuta',

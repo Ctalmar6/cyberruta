@@ -3,11 +3,14 @@ import { lecciones, todasLasTarjetas, unidades } from './contenido'
 import { retos } from './laboratorio'
 import { ListaRetos, Reto } from './Retos'
 import { Leccion } from './Leccion'
+import { ErrorApi, desactivarRecordatorio, guardarSesion, sesionGuardada, subirProgreso, traerProgreso, type Sesion } from './nube'
+import { Perfil } from './Perfil'
 import {
   cargar, completarLeccion, guardar, META_DIARIA_XP, racha, repasar, tarjetasPendientes, xpHoy, type Progreso,
 } from './progreso'
 import { Repaso } from './Repaso'
 import { ruta } from './ruta'
+import { fusionar } from './sincronizar'
 
 type Pantalla =
   | { tipo: 'inicio' }
@@ -16,6 +19,7 @@ type Pantalla =
   | { tipo: 'resultado'; antes: Antes }
   | { tipo: 'laboratorio' }
   | { tipo: 'reto'; id: string; antes: Antes }
+  | { tipo: 'perfil' }
 
 // XP y racha al abrir la lección o el repaso, para mostrar cuánto ganaste.
 type Antes = { xp: number; racha: number }
@@ -24,6 +28,43 @@ export default function App() {
   const [progreso, setProgreso] = useState<Progreso>(cargar)
   const [pantalla, setPantalla] = useState<Pantalla>({ tipo: 'inicio' })
   useEffect(() => guardar(progreso), [progreso])
+
+  const [sesion, setSesion] = useState<Sesion | null>(sesionGuardada)
+  const [estadoNube, setEstadoNube] = useState('')
+  const cambiarSesion = (s: Sesion | null) => {
+    guardarSesion(s)
+    setSesion(s)
+    setEstadoNube('')
+  }
+  const errorNube = (e: unknown) => {
+    if (e instanceof ErrorApi && e.status === 401) cambiarSesion(null)
+    setEstadoNube(e instanceof ErrorApi ? e.message : 'No se pudo sincronizar.')
+  }
+  const recibir = (remoto: Progreso) => {
+    // Misma referencia si no cambió nada, para no volver a subir en bucle.
+    setProgreso((p) => {
+      const m = fusionar(p, remoto)
+      return JSON.stringify(m) === JSON.stringify(p) ? p : m
+    })
+    setEstadoNube(`Sincronizado a las ${new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}`)
+  }
+
+  // Traer de la nube al entrar y cada vez que la app vuelve a primer plano.
+  useEffect(() => {
+    if (!sesion) return
+    const traer = () => traerProgreso(sesion.token).then(recibir, errorNube)
+    traer()
+    const alVolver = () => document.visibilityState === 'visible' && traer()
+    document.addEventListener('visibilitychange', alVolver)
+    return () => document.removeEventListener('visibilitychange', alVolver)
+  }, [sesion])
+
+  // Subir los cambios (agrupados) poco después de cada avance.
+  useEffect(() => {
+    if (!sesion) return
+    const t = setTimeout(() => subirProgreso(sesion.token, progreso).then(recibir, errorNube), 1500)
+    return () => clearTimeout(t)
+  }, [progreso, sesion])
 
   const ahora = new Date()
   const xp = xpHoy(progreso, ahora)
@@ -40,7 +81,7 @@ export default function App() {
         leccion={leccion}
         onSalir={() => setPantalla({ tipo: 'inicio' })}
         onTerminar={(errores) => {
-          setProgreso(completarLeccion(progreso, leccion.id, leccion.tarjetas.map((t) => t.id), errores, new Date()))
+          setProgreso((p) => completarLeccion(p, leccion.id, leccion.tarjetas.map((t) => t.id), errores, new Date()))
           setPantalla({ tipo: 'resultado', antes: pantalla.antes })
         }}
       />
@@ -75,9 +116,24 @@ export default function App() {
         reto={reto}
         onSalir={() => setPantalla({ tipo: 'laboratorio' })}
         onTerminar={(pistas) => {
-          setProgreso(completarLeccion(progreso, reto.id, reto.tarjetas.map((t) => t.id), pistas, new Date()))
+          setProgreso((p) => completarLeccion(p, reto.id, reto.tarjetas.map((t) => t.id), pistas, new Date()))
           setPantalla({ tipo: 'resultado', antes: pantalla.antes })
         }}
+      />
+    )
+  }
+
+  if (pantalla.tipo === 'perfil') {
+    return (
+      <Perfil
+        sesion={sesion}
+        estadoNube={estadoNube}
+        onSesion={cambiarSesion}
+        onCerrarSesion={async () => {
+          if (sesion) await desactivarRecordatorio(sesion.token).catch(() => {})
+          cambiarSesion(null)
+        }}
+        onSalir={() => setPantalla({ tipo: 'inicio' })}
       />
     )
   }
@@ -103,7 +159,12 @@ export default function App() {
     <main className="app">
       <header className="barra">
         <span className="marca">&gt;_ CyberRuta</span>
-        <span className="racha" aria-label={`Racha de ${dias} días`}>🔥 {dias}</span>
+        <span className="barra-derecha">
+          <button className="perfil-btn" onClick={() => setPantalla({ tipo: 'perfil' })}>
+            👤 {sesion ? sesion.usuario : 'Crear perfil'}
+          </button>
+          <span className="racha" aria-label={`Racha de ${dias} días`}>🔥 {dias}</span>
+        </span>
       </header>
 
       <section className="hoy">

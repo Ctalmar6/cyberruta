@@ -187,6 +187,20 @@ code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; color: var(--acen
   font: inherit; font-size: 16px; /* 16px evita que Safari haga zoom al enfocar */
 }
 
+/* Perfil */
+.barra-derecha { display: flex; gap: 12px; align-items: center; }
+.perfil-btn {
+  background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 99px;
+  padding: 6px 12px; font-size: 0.85rem; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pestanas { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--fondo); padding: 4px; border-radius: 12px; }
+.pestanas button { background: none; border: 0; padding: 10px; border-radius: 9px; font-weight: 600; color: var(--suave); }
+.pestanas button.activa { background: var(--tarjeta); color: var(--texto); }
+.formulario { display: grid; gap: 14px; }
+.formulario label { display: grid; gap: 6px; font-weight: 600; font-size: 0.9rem; }
+.formulario .campo { font-size: 16px; }
+.error { color: #ff8a8a; font-size: 0.9rem; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
